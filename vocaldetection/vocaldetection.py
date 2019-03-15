@@ -5,7 +5,13 @@ import scipy.optimize as opt
 from scipy.special import erf
 from .due import due, Doi
 
-__all__ = ["Model", "Fit", "opt_err_func", "transform_data", "cumgauss"]
+__all__ = ["Model", "Fit", "opt_err_func", "transform_data", "cumgauss",
+           "hello_function", "nova"]
+
+
+def nova(ia):
+    print("EU EXISTO MAS NAO TENHO TESTES :(")
+    return (ia + 1)
 
 
 # Use duecredit (duecredit.org) to provide a citation to relevant work to
@@ -14,7 +20,26 @@ __all__ = ["Model", "Fit", "opt_err_func", "transform_data", "cumgauss"]
 due.cite(Doi("10.1167/13.9.30"),
          description="Template project for small scientific Python projects",
          tags=["reference-implementation"],
-         path='shablona')
+         path='vocaldetection')
+
+
+def hello_function(x):
+    """
+    Function that takes the input number and return its power
+    by itself.
+
+    Parameters
+    ----------
+    x : integer
+        I am not responsible if you put other object type
+
+    Returns
+    -------
+    power : integer
+            The value of x powered by x
+
+    """
+    return x**x
 
 
 def transform_data(data):
@@ -97,7 +122,7 @@ def cumgauss(x, mu, sigma):
 
     .. math::
 
-        erf(x) = \\frac{1}{\\sqrt{\\pi}} \int_{-x}^{x} e^{t^2} dt
+        erf(x) = \\frac{1}{\\sqrt{\\pi}} \\int_{-x}^{x} e^{t^2} dt
 
     """
     return 0.5 * (1 + erf((x - mu) / (np.sqrt(2) * sigma)))
@@ -162,6 +187,18 @@ class Model(object):
         -------
         fit : :class:`Fit` instance
             A :class:`Fit` object that contains the parameters of the model.
+
+        Examples
+        --------
+        This function behavior:
+
+        >>> power = hello_function(2)
+        >>> power
+        4
+
+        >>> power = hello_function(3)
+        >>> power
+        27
 
         """
         params, _ = opt.leastsq(opt_err_func, initial,

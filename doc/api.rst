@@ -5,7 +5,7 @@ API
 Classes
 -------
 
-.. currentmodule:: shablona
+.. currentmodule:: vocaldetection
 
 .. autosummary::
    :template: class.rst
