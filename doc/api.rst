@@ -21,6 +21,7 @@ Functions
    :template: function.rst
    :toctree: gen_api
 
+   hello_function
    transform_data
    cumgauss
    opt_err_func

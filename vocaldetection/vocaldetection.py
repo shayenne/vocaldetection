@@ -38,6 +38,11 @@ def hello_function(x):
     power : integer
             The value of x powered by x
 
+    Usage:
+    >>> power = hello_function(3)
+    >>> power
+    27
+
     """
     return x**x
 

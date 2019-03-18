@@ -18,7 +18,7 @@ import os
 
 # General information about the project.
 project = 'vocaldetection'
-copyright = '2015, Ariel Rokem'
+copyright = '2019, Shayenne Moura'
 
 currentdir = os.path.abspath(os.path.dirname(__file__))
 ver_file = os.path.join(currentdir, '..', project, 'version.py')
@@ -267,7 +267,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'vocaldetection', 'vocaldetection Documentation',
-     ['Ariel Rokem'], 1)
+     ['Shayenne Moura'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -281,7 +281,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'vocaldetection', 'vocaldetection Documentation',
-   'Ariel Rokem', 'vocaldetection', 'One line description of project.',
+   'Shayenne Moura', 'vocaldetection', 'One line description of project.',
    'Miscellaneous'),
 ]
 

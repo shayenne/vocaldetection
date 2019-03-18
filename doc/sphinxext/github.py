@@ -146,10 +146,13 @@ def setup(app):
     
     :param app: Sphinx application context.
     """
-    app.info('Initializing GitHub plugin')
-    app.add_role('ghissue', ghissue_role)
-    app.add_role('ghpull', ghissue_role)
-    app.add_role('ghuser', ghuser_role)
-    app.add_role('ghcommit', ghcommit_role)
-    app.add_config_value('github_project_url', None, 'env')
+    from sphinx.util import logging
+    app = logging.getLogger(__name__)
+    app.info('Hello, this is an extension!')
+    #app.info('Initializing GitHub plugin')
+    #app.add_role('ghissue', ghissue_role)
+    #app.add_role('ghpull', ghissue_role)
+    #app.add_role('ghuser', ghuser_role)
+    #app.add_role('ghcommit', ghcommit_role)
+    #app.add_config_value('github_project_url', None, 'env')
     return
