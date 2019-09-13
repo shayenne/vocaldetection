@@ -10,3 +10,5 @@ os.environ["SOURCEID_PATH"] = os.environ["MEDLEYDB_PATH"]+\
 os.environ["AUDIO_PATH"] = os.environ["MEDLEYDB_PATH"]+"Audio/"
 os.environ["LABEL_PATH"] = os.environ["CODE_PATH"]+"Labels/"
 os.environ["FEAT_PATH"] = os.environ["CODE_PATH"]+"Features/"
+
+os.environ["PIECES_JSON"] = "/home/shayenne/repositories/vocaldetection/vocaldetection/vocal_pieces.json"

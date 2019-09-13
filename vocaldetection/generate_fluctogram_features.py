@@ -101,48 +101,23 @@ def generate_fluctogram(train_files):
             with open(FEAT_PATH+os.path.basename(tf1)[:-8]+"_fluctogram.csv", 'w') as myfile:
                 wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
                 wr.writerow(train_features)
-        break
+
 
 if __name__ == '__main__':
     import librosa
     import librosa.display
     import matplotlib.pyplot as plt
     import sys
+    import json
     import spectral, fluctogram
-
-    audio_file  = sys.argv[1]
     
-    generate_fluctogram([audio_file])
+    # Create a list of all musics
+    music_files = []
+
+    with open('vocal_pieces.json') as json_file:  
+        data = json.load(json_file)
+        
+        for music in data.keys():
+            music_files.append(AUDIO_PATH+music+"/"+music+"_MIX.wav")
     
-"""
-    # load the audio
-    y, sr = librosa.load(audio_file)
-
-    # get log freq axis
-    bins_per_octave = 120
-    target_freqs = librosa.cqt_frequencies(6*bins_per_octave, fmin=librosa.note_to_hz('E3'),
-                                           bins_per_octave=bins_per_octave)
-
-    n_fft = 2048
-    hop_length = 441
-    y_stft = librosa.core.stft(y, n_fft=n_fft, hop_length=hop_length)
-
-    y_stft_log = fluctogram.stft_interp(y_stft, librosa.core.fft_frequencies(sr=sr, n_fft=n_fft), target_freqs)
-    #librosa.display.specshow(np.log(1 + y_stft_log), sr=sr, x_axis='time', y_axis='linear',
-    #                         cmap=plt.get_cmap('gray_r'))
-
-    # Calculate the fluctogram
-    print ("Spectral Flatness")
-    spec_flatness = spectral.bandwise_flatness(y_stft_log, target_freqs)
-    print ("shape", spec_flatness.shape)
-    print ("Spectral Contraction")
-    spec_contraction = spectral.bandwise_contraction(y_stft_log, target_freqs)
-    print ("shape", spec_contraction.shape)
-    flucto = fluctogram.Fluctogram(y_stft_log, target_freqs)
-    print ("Fluctogram")
-    print ("shape", flucto.fluctogram.shape)
-    #plt.figure()
-    #flucto.visualize()
-
-    #plt.show()
-"""
+    generate_fluctogram(music_files)
