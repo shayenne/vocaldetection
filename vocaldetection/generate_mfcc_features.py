@@ -32,13 +32,14 @@ label1 = 'present'
 labels = [label0, label1]
 
 
-# Same from MedleyDB API
-VOCALS = ["male singer", "female singer", "male speaker", "female speaker",
-          "male rapper", "female rapper", "beatboxing", "vocalists"]
+# Adjusted from MedleyDB API
+VOCALS = ["male singer", "female singer", "vocalists"]
+         #"male speaker", "female speaker",
+         #"male rapper", "female rapper", "beatboxing"]
 
 
 # Process files to create label and save on a given path
-def save_features(train_files):
+def generate_mfcc(train_files):
 
     if not os.path.exists(FEAT_PATH):
         os.makedirs(FEAT_PATH)
@@ -143,16 +144,14 @@ def save_features(train_files):
                 train_labels.append(tf_label_ind[idx]) 
             print(" ")
             
-            import csv
-
-            with open(FEAT_PATH+os.path.basename(tf1)[:-8]+"_mfcc.csv", 'w') as myfile:
-                wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-                wr.writerow(train_features)
+            # Save MFCCs as npy file
+            train_features = np.matrix(train_features)
+            np.save(FEAT_PATH+os.path.basename(tf1)[:-8]+"_mfcc.npy", train_features)
                 
-            with open(FEAT_PATH+os.path.basename(tf1)[:-8]+"_lbl.csv", 'w') as myfile:
-                wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-                wr.writerow(train_labels)
-        
+            # Save labels as npy file
+            train_labels = np.array(train_labels)
+            np.save(FEAT_PATH+os.path.basename(tf1)[:-8]+"_labels.npy", train_labels)
+            
 
 # Process files to create label and save on a given path
 def generate_vocal_variance(train_files):
@@ -226,11 +225,10 @@ def generate_vocal_variance(train_files):
                 train_features.append(feature_vector[idx])
             print(" ")
             
-            import csv
-
-            with open(FEAT_PATH+os.path.basename(tf1)[:-8]+"_vocalvar.csv", 'w') as myfile:
-                wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-                wr.writerow(train_features)
+            # Save Vocal Variance as npy file
+            train_features = np.matrix(train_features)
+            np.save(FEAT_PATH+os.path.basename(tf1)[:-8]+"_vocalvar.npy", train_features)
+        
         
 
 if __name__ == "__main__":
@@ -245,5 +243,5 @@ if __name__ == "__main__":
             music_files.append(AUDIO_PATH+music+"/"+music+"_MIX.wav")
 
     # Saving vocal labels 
-    #save_features(music_files)
+    generate_mfcc(music_files)
     generate_vocal_variance(music_files)

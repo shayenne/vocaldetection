@@ -96,11 +96,9 @@ def generate_fluctogram(train_files):
                 train_features.append(feature_vector[idx])
             print(" ")
             
-            import csv
-
-            with open(FEAT_PATH+os.path.basename(tf1)[:-8]+"_fluctogram.csv", 'w') as myfile:
-                wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-                wr.writerow(train_features)
+            # Save Fluctogram and Indicators as npy file
+            train_features = np.matrix(train_features)
+            np.save(FEAT_PATH+os.path.basename(tf1)[:-8]+"_fluctogram.npy", train_features)
 
 
 if __name__ == '__main__':
