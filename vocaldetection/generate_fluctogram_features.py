@@ -8,8 +8,8 @@ FEAT_PATH = os.environ["FEAT_PATH"]
 
 # Make 1 second summarization as features with half second of hop length
 # 172 frames == 1 second (using 44100 samples per second)
-feature_length = 96
-half_sec = 48
+feature_length = 4410
+#half_sec = 48
 samplerate = 44100
 
 # Process files to create label and save on a given path
@@ -52,8 +52,8 @@ def generate_fluctogram(train_files):
             target_freqs = librosa.cqt_frequencies(6*bins_per_octave, fmin=librosa.note_to_hz('E3'),
                                                    bins_per_octave=bins_per_octave)
 
-            n_fft = 2048
-            hop_length = 441
+            n_fft = 4410
+            hop_length = 882
             y_stft = librosa.core.stft(audio, n_fft=n_fft, hop_length=hop_length)
 
             y_stft_log = fluctogram.stft_interp(y_stft, librosa.core.fft_frequencies(sr=sr, n_fft=n_fft), target_freqs)
@@ -61,7 +61,20 @@ def generate_fluctogram(train_files):
             spec_flatness = spectral.bandwise_flatness(y_stft_log, target_freqs)
             spec_contraction = spectral.bandwise_contraction(y_stft_log, target_freqs)
             f = fluctogram.Fluctogram(y_stft_log, target_freqs)
+            calc_fluct = f.fluctogram
+            print (spec_flatness.shape, f.fluctogram.shape, spec_contraction.shape)
             
+            zeros = np.zeros(spec_flatness.shape)
+            zeros[spec_flatness > 0.6] = 1
+            
+            print (sum(zeros))
+            
+            # Fluctogram Post Processing
+            calc_fluct[spec_contraction < 0.1] = 0
+            calc_fluct[spec_flatness > 0.6]    = 0
+            np.save(FEAT_PATH+os.path.basename(tf1)[:-8]+"_fluctogram_processed.npy", calc_fluct)
+            
+            break
             sf_shape = spec_flatness.shape[1]
 
             print("mfcc shape", int(sf_shape))
@@ -74,7 +87,7 @@ def generate_fluctogram(train_files):
             # For half second
             # Variance here is calculated based on 1 second related with the central frame
             feature_length = half_sec
-
+            """
             for chunk in range(int(sf_shape/half_sec)):
                 start = chunk*half_sec
             
@@ -98,8 +111,8 @@ def generate_fluctogram(train_files):
             
             # Save Fluctogram and Indicators as npy file
             train_features = np.matrix(train_features)
-            np.save(FEAT_PATH+os.path.basename(tf1)[:-8]+"_fluctogram.npy", train_features)
-
+            np.save(FEAT_PATH+os.path.basename(tf1)[:-8]+"_fluctogram_processed.npy", calc_fluct)
+            """
 
 if __name__ == '__main__':
     import librosa
