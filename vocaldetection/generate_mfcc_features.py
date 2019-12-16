@@ -181,62 +181,36 @@ def generate_vocal_variance(train_files):
 
         #mixes_path = '../MIXES/'+os.path.basename(tf)[:-8]+'/'
 
-        for mix in [tf]: #glob.glob(os.path.join(mixes_path, '*.wav'))+[tf]: # This plus is to add the complete version
-            print (mix)
-
-            if 'novocal' in mix:
-                print ('No vocal label')
-                novocal = True
-                continue
-
-            if 'electronics' in mix or 'percussion' in mix or 'plucked' in mix or 'piano' in mix:
-                continue
-
-            tf1 = mix
-
-            # Load audio
-            audio, sr = librosa.load(tf1, sr=samplerate, mono=True)
-
-            # Extract mfcc coefficients (remember we will discard the first one)
-            # To see all the relevant kwarg arugments consult the documentation for
-            # librosa.feature.mfcc, librosa.feature.melspectrogram and librosa.filters.mel
-            mfcc = librosa.feature.mfcc(audio, sr=sr, n_fft=window_size, hop_length=hop_size,
-                                        fmax=samplerate/2, n_mels=n_bands, n_mfcc=6) # 5 first MFCCs
-
-            # Discard the first coefficient
-            mfcc = mfcc[1:,:]
-
-            print("mfcc shape", int(mfcc.shape[1]))
-
-            #print (mfcc.shape)
-            print("number of chunks", int(mfcc.shape[1]/half_sec))
-
-            feature_vector = []
-
-            # Delta features 
-            mfcc_delta = librosa.feature.delta(mfcc)
-            mfcc_delta2 = librosa.feature.delta(mfcc, order=2)
-
-            # For half second
-            for chunk in range(int(mfcc.shape[1]/half_sec)):
-                start = chunk*half_sec
-                if start < feature_length:
-                    mfcc_var = np.std(mfcc[:,0:start+feature_length], 1)**2
-                else:
-                    mfcc_var = np.std(mfcc[:,start-feature_length:start+feature_length], 1)**2
-                
-                # Concatenate means and std. dev's into a single feature vector
-                feature_vector.append(mfcc_var)
-                #print("feature summary: {}".format(len(feature_vector)))
-
-            # Store the feature vector and corresponding label in integer format
-            for idx in range(len(feature_vector)):
-                train_features.append(feature_vector[idx])
-            print(" ")
+          
+        tf = os.path.basename(tf)[:-8]
+        # Calculate VV because it is not included on Lehner feature pack
+        audiofile, _ = librosa.load(AUDIO_PATH+tf+'/'+tf+'_MIX.wav', sr=SR)
+        vv=vocal_var(audiofile)
+        print ('Shape', vv.shape)
+           
             
-            # Save Vocal Variance as npy file
-            train_features = np.matrix(train_features)
-            np.save(FEAT_PATH+os.path.basename(tf1)[:-8]+"_vocalvar.npy", train_features)
+        # Save Vocal Variance as npy file
+        train_features = np.matrix(vv)
+        np.save(FEAT_PATH+tf+"_vv_lee.npy", train_features)
+        
+          
+        
+        
+# vocal variance parameters 
+FRAMESIZE = 2205
+HOPSIZE = 441
+SR = 22050
+# Function taken from https://github.com/kyungyunlee/ismir2018-revisiting-svd/blob/master/lehner_randomforest/vocal_var.py
+def vocal_var(audiofile):
+    ''' Compute vocal variance
+    '''
+    mfcc = librosa.feature.mfcc(audiofile, sr=SR, n_mfcc=30, n_fft=FRAMESIZE, hop_length=HOPSIZE, n_mels=128)
+    mfcc = mfcc.swapaxes(0, 1)
+    vv = np.empty([len(mfcc), 5])
+    for i in range(len(mfcc)):
+        for j in range(5):
+            vv[i][j] = np.var(mfcc[max(0, i - 5): min(len(mfcc), i + 6), j + 1])
+    return vv        
         
         
 
@@ -252,5 +226,5 @@ if __name__ == "__main__":
             music_files.append(AUDIO_PATH+music+"/"+music+"_MIX.wav")
 
     # Saving vocal labels 
-    generate_mfcc(music_files)
+   # generate_mfcc(music_files)
     generate_vocal_variance(music_files)

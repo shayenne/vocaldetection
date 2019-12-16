@@ -5,6 +5,11 @@ import numpy as np
 import json
 import os
 
+"""
+
+
+"""
+
 # Path for source activations
 SOURCEID_PATH = os.environ["MEDLEYDB_PATH"]+\
 		"Annotations/Instrument_Activations/SOURCEID/"
@@ -17,7 +22,7 @@ VOCALS = ["male singer", "female singer", "male speaker", "female speaker",
           "male rapper", "female rapper", "beatboxing", "vocalists"]
 
 
-# Process files to create label and save on a given path
+# Process files to create label and save on a given path (adjusted for VGGish size of frame)
 def save_labels(files):
 
     if not os.path.exists(LABEL_PATH):
@@ -31,14 +36,14 @@ def save_labels(files):
         y, sr = lr.load(AUDIO_PATH + music + "/" + music + "_MIX.wav", sr=None)
         duration = lr.get_duration(y, sr)
 
-        # Get music duration in miliseconds (100 não são milisegundos... O.O)
-        label_vector = np.zeros(int(duration*100)) 
+        # Get music duration in miliseconds (1000 transform into miliseconds)
+        label_vector = np.zeros(int(duration*1000)) 
 
         for idx, source in source_activation.iterrows():
             
             if source.instrument_label in VOCALS:
                 start, end = source.start_time, source.end_time
-                label_vector[int(start*100):int(end*100)] = 1
+                label_vector[int(start*1000):int(end*1000)] = 1
                 
         df = pd.DataFrame(label_vector.astype('int').T,columns=None,index=None)
 
@@ -46,8 +51,11 @@ def save_labels(files):
         df.to_csv(LABEL_PATH + music+"_vocal.csv", index=False, header=False)
         #os.system('cp ' + AUDIO_PATH + music + '/' + music + '_MIX.wav' \
         #          + ' ' + dir_path)
+        
+        print ('Generated vocals file for', music)
 
     print (" >> Vocal labels completed.")
+    
 
 
 if __name__ == "__main__":
