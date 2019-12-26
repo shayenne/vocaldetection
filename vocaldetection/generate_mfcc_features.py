@@ -17,14 +17,14 @@ FEAT_PATH = os.environ["CODE_PATH"]+"Features/"
 # to a sample rate of 44100
 samplerate = 44100
 
-window_size = 2048
-hop_size = 441
+window_size = 4410
+hop_size = 882
 n_bands = 40
-n_mfcc = 13
+n_mfcc = 17
 # Make 1 second summarization as features with half second of hop length
 # 172 frames == 1 second (using 44100 samples per second)
-feature_length = 96
-half_sec = 48
+#feature_length = 96
+#half_sec = 48
 
 # Specify the labels (classes) we're going to classify the data into
 label0 = 'absent'
@@ -83,7 +83,7 @@ def generate_mfcc(train_files):
                                         fmax=samplerate/2, n_mels=n_bands, n_mfcc=(n_mfcc + 1))
 
             # Discard the first coefficient
-            mfcc = mfcc[1:,:]
+            #mfcc = mfcc[1:,:]
 
             print("mfcc shape", int(mfcc.shape[1]))
 
@@ -94,14 +94,22 @@ def generate_mfcc(train_files):
             #timestamp = pd.DataFrame.as_matrix(f0line)[:,0]
 
             #print (mfcc.shape)
-            print("number of chunks", int(mfcc.shape[1]/half_sec))
+            #print("number of chunks", int(mfcc.shape[1]/half_sec))
 
             feature_vector = []
             tf_label = []
 
             # Delta features 
             mfcc_delta = librosa.feature.delta(mfcc)
-            mfcc_delta2 = librosa.feature.delta(mfcc, order=2)
+            #mfcc_delta2 = librosa.feature.delta(mfcc, order=2)
+            print (mfcc.shape,mfcc_delta.shape)
+            for idx in range(mfcc.shape[1]):
+                #print (idx)
+                #print (mfcc[:,idx].shape)
+                train_features.append(np.concatenate((mfcc[:,idx], mfcc_delta[:,idx])))
+            #print (len(train_features))
+            np.save(FEAT_PATH+os.path.basename(tf1)[:-8]+"_mfccedelta.npy", train_labels)
+            """
 
             # For half second
             for chunk in range(int(mfcc.shape[1]/half_sec)):
@@ -151,6 +159,7 @@ def generate_mfcc(train_files):
             # Save labels as npy file
             train_labels = np.array(train_labels)
             np.save(FEAT_PATH+os.path.basename(tf1)[:-8]+"_labels.npy", train_labels)
+            """
             
 
 # Process files to create label and save on a given path
