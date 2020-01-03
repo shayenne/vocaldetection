@@ -16,11 +16,13 @@ SOURCEID_PATH = os.environ["MEDLEYDB_PATH"]+\
 AUDIO_PATH = os.environ["MEDLEYDB_PATH"]+"Audio/"
 LABEL_PATH = os.environ["CODE_PATH"]+"Labels/"
 
-
+"""
 # Same from MedleyDB API
-VOCALS = ["male singer", "female singer", "male speaker", "female speaker",
+VOCALS_MDB = ["male singer", "female singer", "male speaker", "female speaker",
           "male rapper", "female rapper", "beatboxing", "vocalists"]
-
+"""
+# Project decision of singing labels related
+VOCALS = ["male singer", "female singer", "vocalists", "choir"]
 
 # Process files to create label and save on a given path (adjusted for VGGish size of frame)
 def save_labels(files):

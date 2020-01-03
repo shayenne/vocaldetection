@@ -50,10 +50,10 @@ if __name__ == "__main__":
     with open('vocal_pieces.json') as json_file:  
         data = json.load(json_file)
 
-#     # Saving vocal labels for features by Lehner 
-#     winsize = 20 # miliseconds
-#     hopsize = 20 # miliseconds
-#     adjust_labels(data.keys(), winsize, hopsize)
+    # Saving vocal labels for features by Lehner 
+    winsize = 20 # miliseconds
+    hopsize = 20 # miliseconds
+    adjust_labels(data.keys(), winsize, hopsize)
     
     # Saving vocal labels for features VGGish 
     winsize = 960 # miliseconds
