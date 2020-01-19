@@ -7,54 +7,72 @@ import os
 import pandas as pd
 import numpy as np
 #import seaborn as sns
-import librosa
+#import librosa
 import numpy as np
 from scipy.io import arff
 #import matplotlib.pyplot as plt
 #%matplotlib inline
 import joblib
 
+dirname = os.path.dirname(__file__)
+
 
 """ MFCC - LEHNER """
 # Path for features calculated with Lehner Code
-all_feat_path = '/media/shayenne/CompMusHD/DATASETS/MedleyDB/AllMusics/ICASSP2014/'
+all_feat_path = '/media/DISCO2TB/datasets/MedleyDB/Features/ICASSP2014/'
 f = all_feat_path+'ICASSP2014RNN/'
 mfcc_path = all_feat_path+'MFCC_29_30_0_0.5_0dt/40_20_40/'
 # Read features and labels
-FEAT_PATH = os.environ["FEAT_PATH"]
+FEAT_PATH = '/media/DISCO2TB/datasets/MedleyDB/Features/'#os.environ["FEAT_PATH"]
 AUDIO_PATH = os.environ["AUDIO_PATH"]
 PIECES = os.environ["PIECES_JSON"]
+PIECES_SPLIT =  os.path.join(dirname, 'split_train_test.json')
 
 """ VGGISH """
 # Read features and labels
 VGGish_PATH = '/media/shayenne/CompMusHD/BRUCUTU/fasttmp/VGGISH/'
-FEAT_PATH = os.environ["FEAT_PATH"]
-PIECES = os.environ["PIECES_JSON"]
+#FEAT_PATH = os.environ["FEAT_PATH"]
+#PIECES = os.environ["PIECES_JSON"]
 
 """ FEATURE SELECTED """
-feature = 'VGGISH'
+feature = 'MFCC'
 
 def __main__():
 
-    music_files = []
+    train_files = []
+    test_files = []
 
-    with open(PIECES) as json_file:  
+    with open(PIECES_SPLIT) as json_file:  
         data = json.load(json_file)
-
-        for music in data.keys():
-            music_files.append(music)
+    
+        # Load train data
+        for music in data['train']:
+            train_files.append(music)
+        #    print (music)
+            
+        # Load test data
+        #print ('Test data')
+        for music in data['test']:
+            test_files.append(music)
+        #    print (music)
+    #sys.exit(0)
+    
     
     if feature == 'MFCC':
-        X, y = read_mfcc_features(music_files)
+        X_train, y_train = read_mfcc_features(train_files)
+        X_test, y_test = read_mfcc_features(test_files)
     elif feature == 'VGGISH':
-        X, y = read_vggish_features(music_files)
+        X_train, y_train = read_vggish_features(train_files)
+        X_test, y_test = read_vggish_features(test_files)
         
     # Percentage of singing voice frames on dataset
-    print ('Percentage of singing voice frames on dataset:',round(sum(y)/len(X),3))
+    print ('Percentage of singing voice frames on dataset:')
+    print ('For train:',round(sum(y_train)/len(X_train),3))
+    print ('For test:',round(sum(y_test)/len(X_test),3))
+    
+    nfolds = 5
            
-    nfolds = 2
-           
-    search_result = rf_param_selection(X, y, nfolds)
+    search_result = rf_param_selection(X_train, y_train, nfolds)
     
     filename = 'search_result_RF_VGGish.sav'
     #print (filename)
@@ -63,13 +81,21 @@ def __main__():
     filename = 'best_model_RF_VGGish.sav'
     #print (filename)
     joblib.dump(search_result.best_estimator_, filename)
+
+    print ('===== TRAIN EVALUATION ====')
+    evaluate(search_result.best_estimator_, X_train, y_train)
     
-    # Evaluate the estimator
-    # Now lets predict the labels of the test data!
-    predictions = search_result.best_estimator_.predict(X)
+    print ('===== TEST EVALUATION ====')
+    evaluate(search_result.best_estimator_, X_test, y_test)
     
+    
+def evaluate(clf, X, y):
     from sklearn.metrics import precision_recall_fscore_support
 
+    # Evaluate the estimator
+    # Now lets predict the labels of the test data!
+    predictions = clf.predict(X)
+    
     metrics = precision_recall_fscore_support(y, predictions)
     print('Negatives : ', metrics[3][0],'- Positives',metrics[3][1])
     print('Precision :', round(metrics[0][1],3))
@@ -161,23 +187,24 @@ def rf_param_selection(X, y, nfolds):
     from sklearn.model_selection import GridSearchCV       
     
     # Number of estimators to be considered
-    n_estimators = [int(x) for x in np.linspace(start = 10, stop = 200, num = 10)]
+    n_estimators = [int(x) for x in np.linspace(start = 10, stop = 110, num = 5)]
     # Number of features to consider at every split
     max_features = ['auto', 'sqrt']
     # Maximum number of levels in tree
-    max_depth = [int(x) for x in np.linspace(10, 90, num = 5)]
+    max_depth = [int(x) for x in np.linspace(10, 30, num = 3)]
     max_depth.append(None)
     # Minimum number of samples required to split a node
-    min_samples_split = [2, 5, 10]
+    #min_samples_split = [2, 5, 10]
     # Minimum number of samples required at each leaf node
-    min_samples_leaf = [1, 2, 4]
+    #min_samples_leaf = [1, 2, 4]
     # Method of selecting samples for training each tree
-    bootstrap = [True, False]# Create the random grid
+    bootstrap = [True, False]
+    # Create the parameters grid
     param_grid = {'n_estimators': n_estimators,
                    'max_features': max_features,
                    'max_depth': max_depth,
-                   'min_samples_split': min_samples_split,
-                   'min_samples_leaf': min_samples_leaf,
+                   #'min_samples_split': min_samples_split,
+                   #'min_samples_leaf': min_samples_leaf,
                    'bootstrap': bootstrap}
 
     # Use the random grid to search for best hyperparameters
@@ -185,7 +212,7 @@ def rf_param_selection(X, y, nfolds):
     rf = RandomForestClassifier()
     
     grid_search = GridSearchCV(rf, param_grid, cv = nfolds, 
-                               verbose=10, n_jobs = 12)
+                               verbose=10, n_jobs = -1)
     # Fit the grid search model
     grid_search.fit(X, y)
            
