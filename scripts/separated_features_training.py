@@ -22,6 +22,7 @@ dirname = os.path.dirname(__file__)
 all_feat_path = '/media/DISCO2TB/datasets/MedleyDB/Features/ICASSP2014/'
 f = all_feat_path+'ICASSP2014RNN/'
 mfcc_path = all_feat_path+'MFCC_29_30_0_0.5_0dt/40_20_40/'
+
 # Read features and labels
 FEAT_PATH = '/media/DISCO2TB/datasets/MedleyDB/Features/'#os.environ["FEAT_PATH"]
 AUDIO_PATH = os.environ["AUDIO_PATH"]
@@ -30,12 +31,13 @@ PIECES_SPLIT =  os.path.join(dirname, 'split_train_test.json')
 
 """ VGGISH """
 # Read features and labels
-VGGish_PATH = '/media/shayenne/CompMusHD/BRUCUTU/fasttmp/VGGISH/'
+VGGish_PATH = '/media/DISCO2TB/datasets/MedleyDB/VGGISH/'
 #FEAT_PATH = os.environ["FEAT_PATH"]
 #PIECES = os.environ["PIECES_JSON"]
 
 """ FEATURE SELECTED """
-feature = 'MFCC'
+feature = 'AGG'
+metric_eval = 'precision'
 
 def __main__():
 
@@ -64,7 +66,14 @@ def __main__():
     elif feature == 'VGGISH':
         X_train, y_train = read_vggish_features(train_files)
         X_test, y_test = read_vggish_features(test_files)
-        
+    elif feature == 'ALL':
+        X_train, y_train = read_all_features(train_files)
+        X_test, y_test = read_all_features(test_files)
+    elif feature == 'AGG':
+        X_train, y_train = read_agg_features(train_files)
+        X_test, y_test = read_agg_features(test_files)    
+
+
     # Percentage of singing voice frames on dataset
     print ('Percentage of singing voice frames on dataset:')
     print ('For train:',round(sum(y_train)/len(X_train),3))
@@ -74,11 +83,11 @@ def __main__():
            
     search_result = rf_param_selection(X_train, y_train, nfolds)
     
-    filename = 'search_result_RF_VGGish.sav'
+    filename = 'search_result_RF_'+feature+'_'+metric_eval+'.sav'
     #print (filename)
     joblib.dump(search_result, filename)
     
-    filename = 'best_model_RF_VGGish.sav'
+    filename = 'best_model_RF_'+feature+'_'+metric_eval+'.sav'
     #print (filename)
     joblib.dump(search_result.best_estimator_, filename)
 
@@ -108,7 +117,7 @@ def evaluate(clf, X, y):
     
     
     
-def read_vggish_features(music_files):
+def read_vggish_features(music_files, verbose=True):
     train_features = []
     train_labels = []
 
@@ -117,8 +126,8 @@ def read_vggish_features(music_files):
         try:
             vggish = pd.read_csv(VGGish_PATH+os.path.basename(tf)+"_VGGish_PCA.csv",index_col=None, header=None)
             vggish = vggish.values
-
-            print('.', end = '')
+            if verbose:
+                print('.', end = '')
         except FileNotFoundError:
             print ('Não encontrei', os.path.basename(tf))
             continue
@@ -137,7 +146,8 @@ def read_vggish_features(music_files):
                 train_features.append(feature_vector[idx])
                 train_labels.append(lbl[idx])
 
-    print ('\n> Load data completed!')
+    if verbose:
+        print ('\n> Load data completed!')
     return (np.array(train_features), np.array(train_labels))
 
         
@@ -174,6 +184,77 @@ def read_mfcc_features(music_files):
     print ('\n> Load data completed!')
     return (np.array(train_features), np.array(train_labels))
   
+# TODO: arrumar esta função, ela ainda não faz o que deveria (ler fluctogram features)
+def read_all_features(music_files):
+    train_features = []
+    train_labels = []
+
+    for tf in music_files:
+        try:     
+            dataset = arff.loadarff(f+tf+'_MIX.arff')#arff.load(open(mfcc_path+tf+'_MIX.arff', 'r'))    
+            data = pd.DataFrame(dataset[0]).values#np.array(dataset['data'])
+            #print (mfcc_path+tf+'_MIX.arff')
+            print ('.',end='')
+        except FileNotFoundError:
+            print ('File not found: ',f+tf+'_MIX.arff')
+            continue
+
+        # Calculate VV because it is not included on Lehner feature pack
+        #audiofile, _ = librosa.load(AUDIO_PATH+tf+'/'+tf+'_MIX.wav', sr=SR)
+        #vv=lbl = np.load(FEAT_PATH+tf+"_vv_lee.npy")
+        #print (vv.shape)
+        lbl = np.load(FEAT_PATH+tf+"_labels_20ms.npy")
+        
+        print (data.shape)
+
+        feature_vector = []
+        for idx in range(len(lbl)):
+            #feature_vector.append(np.concatenate((data[idx], vv[idx]), axis=0))
+            feature_vector.append(data[idx])
+
+        # Store the feature vector and corresponding label in integer format
+        for idx in range(len(feature_vector)):
+            train_features.append(feature_vector[idx])
+            train_labels.append(lbl[idx])
+
+    print ('\n> Load data completed!')
+    return (np.array(train_features), np.array(train_labels))
+
+def read_agg_features(music_files, verbose=True):
+    train_features = []
+    train_labels = []
+
+    for tf in music_files:
+        try:     
+            #dataset = arff.loadarff(FEAT_PATH+'AGG/'+tf+'_MIX.arff')#arff.load(open(mfcc_path+tf+'_MIX.arff', 'r'))    
+            data = np.load(FEAT_PATH+'AGG/'+tf+"_agg.npy")
+            #print (mfcc_path+tf+'_MIX.arff')
+            if verbose:
+                print ('.',end='')
+        except FileNotFoundError:
+            print ('File not found: ',FEAT_PATH+'AGG/'+tf+'_MIX.arff')
+            continue
+
+        # Calculate VV because it is not included on Lehner feature pack
+        #audiofile, _ = librosa.load(AUDIO_PATH+tf+'/'+tf+'_MIX.wav', sr=SR)
+        #vv=lbl = np.load(FEAT_PATH+tf+"_vv_lee.npy")
+        #print (vv.shape)
+        lbl = np.load(FEAT_PATH+tf+"_labels_200ms.npy")
+        
+        #print (data.shape)
+
+        feature_vector = []
+        for idx in range(len(lbl)):
+            feature_vector.append(data[idx])
+
+        # Store the feature vector and corresponding label in integer format
+        for idx in range(len(feature_vector)):
+            if lbl[idx] != -1: # Remove confusion frames
+                train_features.append(feature_vector[idx])
+                train_labels.append(lbl[idx])
+    if verbose:
+        print ('\n> Load data completed!')
+    return (np.array(train_features), np.array(train_labels))
 
 def rf_param_selection(X, y, nfolds):
     """ Search better hyperparameters for RF classifier
@@ -212,11 +293,23 @@ def rf_param_selection(X, y, nfolds):
     rf = RandomForestClassifier()
     
     grid_search = GridSearchCV(rf, param_grid, cv = nfolds, 
-                               verbose=10, n_jobs = -1)
+                               scoring = metric_eval, verbose = 10, n_jobs = -1)
     # Fit the grid search model
     grid_search.fit(X, y)
            
     return grid_search   
+
+def plot_cm(cm):
+    import seaborn as sns
+    import matplotlib.pyplot as plt     
+
+    ax = plt.subplot()
+    ax = sns.heatmap(cm/sum(cm), annot=True, ax = ax, fmt='.3f',vmin=0, vmax=1,  cmap="Blues_r"); #annot=True to annotate cells
+
+    sns.set(font_scale=1.4)
+    # labels, title and ticks
+    ax.set_xlabel('Predicted labels');ax.set_ylabel('True labels'); 
+    ax.set_title('Confusion Matrix'); 
            
 
 if __name__ == '__main__':
