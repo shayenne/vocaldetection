@@ -28,6 +28,7 @@ FEAT_PATH = '/media/DISCO2TB/datasets/MedleyDB/Features/'#os.environ["FEAT_PATH"
 AUDIO_PATH = os.environ["AUDIO_PATH"]
 PIECES = os.environ["PIECES_JSON"]
 PIECES_SPLIT =  os.path.join(dirname, 'split_train_test.json')
+SOURCE_PATH = '/media/DISCO2TB/datasets/MedleyDB/Annotations/Instrument_Activations/SOURCEID/'
 
 """ VGGISH """
 # Read features and labels
@@ -116,11 +117,33 @@ def evaluate(clf, X, y):
     print('Confusion Matrix:', cm)
     
     
-    
+def which_sources(music_name, start, end):
+    with open(SOURCE_PATH+music_name+'_SOURCEID.lab') as f:
+        data = f.readlines()
+
+        music_sources = {}
+        for line in range(1,len(data)):
+            ini, fim, src = data[line].split(',')
+            ini, fim = int(float(ini)), int(float(fim)+1)
+            music_sources[range(ini, fim)] = src[:-1]
+
+    stamps = range(start,end)
+
+    src_set = set()
+    for stamp in stamps:
+        for key in music_sources:
+            if stamp in key:
+                src_set.add(music_sources[key])
+    return (src_set) 
+
 def read_vggish_features(music_files, verbose=True):
     train_features = []
     train_labels = []
 
+    # Guard number of discarded and total frames
+    discard = 0
+    total = 0
+    
     for tf in music_files:
         # Load VGGish audio embeddings
         try:
@@ -145,9 +168,15 @@ def read_vggish_features(music_files, verbose=True):
             if lbl[idx] != -1: # Remove confusion frames
                 train_features.append(feature_vector[idx])
                 train_labels.append(lbl[idx])
+            else:
+                discard += 1
+                
+        total += len(feature_vector)
 
     if verbose:
         print ('\n> Load data completed!')
+        print ('Percentage of discarded frames', round(discard/total,2))
+        
     return (np.array(train_features), np.array(train_labels))
 
         
@@ -185,31 +214,24 @@ def read_mfcc_features(music_files):
     return (np.array(train_features), np.array(train_labels))
   
 # TODO: arrumar esta função, ela ainda não faz o que deveria (ler fluctogram features)
-def read_all_features(music_files):
+def read_all_features(music_files, verbose=True):
     train_features = []
     train_labels = []
 
     for tf in music_files:
         try:     
-            dataset = arff.loadarff(f+tf+'_MIX.arff')#arff.load(open(mfcc_path+tf+'_MIX.arff', 'r'))    
-            data = pd.DataFrame(dataset[0]).values#np.array(dataset['data'])
-            #print (mfcc_path+tf+'_MIX.arff')
-            print ('.',end='')
+            dataset = arff.loadarff(f+tf+'_MIX.arff') 
+            data = pd.DataFrame(dataset[0]).values
+            if verbose:
+                print ('.',end='')
         except FileNotFoundError:
             print ('File not found: ',f+tf+'_MIX.arff')
             continue
 
-        # Calculate VV because it is not included on Lehner feature pack
-        #audiofile, _ = librosa.load(AUDIO_PATH+tf+'/'+tf+'_MIX.wav', sr=SR)
-        #vv=lbl = np.load(FEAT_PATH+tf+"_vv_lee.npy")
-        #print (vv.shape)
         lbl = np.load(FEAT_PATH+tf+"_labels_20ms.npy")
-        
-        print (data.shape)
 
         feature_vector = []
         for idx in range(len(lbl)):
-            #feature_vector.append(np.concatenate((data[idx], vv[idx]), axis=0))
             feature_vector.append(data[idx])
 
         # Store the feature vector and corresponding label in integer format
@@ -217,7 +239,8 @@ def read_all_features(music_files):
             train_features.append(feature_vector[idx])
             train_labels.append(lbl[idx])
 
-    print ('\n> Load data completed!')
+    if verbose:
+        print ('\n> Load data completed!')
     return (np.array(train_features), np.array(train_labels))
 
 def read_agg_features(music_files, verbose=True):
@@ -272,8 +295,8 @@ def rf_param_selection(X, y, nfolds):
     # Number of features to consider at every split
     max_features = ['auto', 'sqrt']
     # Maximum number of levels in tree
-    max_depth = [int(x) for x in np.linspace(10, 30, num = 3)]
-    max_depth.append(None)
+    max_depth = [int(x) for x in np.linspace(10, 40, num = 4)]
+    #max_depth.append(None)
     # Minimum number of samples required to split a node
     #min_samples_split = [2, 5, 10]
     # Minimum number of samples required at each leaf node
