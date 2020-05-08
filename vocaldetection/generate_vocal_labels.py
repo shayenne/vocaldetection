@@ -18,8 +18,9 @@ LABEL_PATH = os.environ["CODE_PATH"]+"Labels/"
 
 
 # Same from MedleyDB API
-VOCALS = ["male singer", "female singer", "male speaker", "female speaker",
-          "male rapper", "female rapper", "beatboxing", "vocalists"]
+VOCALS = ['female singer', 'male singer', 'vocalists', 'choir']
+         #["male singer", "female singer", "male speaker", "female speaker",
+         #"male rapper", "female rapper", "beatboxing", "vocalists"]
 
 
 # Process files to create label and save on a given path (adjusted for VGGish size of frame)
