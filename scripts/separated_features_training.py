@@ -140,7 +140,7 @@ def read_vggish_features(music_files, verbose=True):
     train_features = []
     train_labels = []
 
-    # Guard number of discarded and total frames
+    # Store number of discarded and total frames
     discard = 0
     total = 0
     
@@ -246,6 +246,10 @@ def read_all_features(music_files, verbose=True):
 def read_agg_features(music_files, verbose=True):
     train_features = []
     train_labels = []
+    
+    # Store number of discarded and total frames
+    discard = 0
+    total = 0
 
     for tf in music_files:
         try:     
@@ -275,8 +279,15 @@ def read_agg_features(music_files, verbose=True):
             if lbl[idx] != -1: # Remove confusion frames
                 train_features.append(feature_vector[idx])
                 train_labels.append(lbl[idx])
+            else:
+                discard += 1
+                
+        total += len(feature_vector)
+
     if verbose:
         print ('\n> Load data completed!')
+        print ('Percentage of discarded frames', round(discard/total,2))
+            
     return (np.array(train_features), np.array(train_labels))
 
 def rf_param_selection(X, y, nfolds):
