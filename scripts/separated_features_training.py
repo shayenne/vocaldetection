@@ -346,5 +346,14 @@ def plot_cm(cm):
     ax.set_title('Confusion Matrix'); 
            
 
+def optimal_threshold(predicted,target):
+    from sklearn.metrics import roc_curve
+    fpr, tpr, threshold = roc_curve(target, predicted)
+    i = np.arange(len(tpr)) 
+    roc = pd.DataFrame({'tf' : pd.Series(tpr-(1-fpr), index=i), 'threshold' : pd.Series(threshold, index=i)})
+    roc_t = roc.iloc[(roc.tf-0).abs().argsort()[:1]]
+
+    return list(roc_t['threshold'])[0]
+        
 if __name__ == '__main__':
     __main__()
