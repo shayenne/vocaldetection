@@ -54,7 +54,7 @@ onboard==1.4.1
 pexpect==4.2.1
 Pillow==5.1.0
 ply==3.11
-protobuf==3.11.1
+protobuf==3.18.3
 psutil==5.4.2
 pyasn1==0.4.2
 pycairo==1.16.2
