@@ -6,7 +6,7 @@ astor==0.8.1
 audioread==2.1.8
 beautifulsoup4==4.6.0
 blinker==1.4
-certifi==2018.1.18
+certifi==2022.12.7
 cffi==1.13.2
 chardet==3.0.4
 chrome-gnome-shell==0.0.0
